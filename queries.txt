@@ -1,0 +1,242 @@
+﻿1. Basic DNS Logs Search
+
+
+index=_* OR index=* sourcetype=dnslogs
+
+
+This query retrieves all DNS log entries in the selected index.
+________________
+
+
+2. Top Source IPs by Query Count
+
+
+index=_* OR index=* sourcetype=dnslogs
+| stats count by src_ip
+| sort -count
+
+
+This query identifies the source IP addresses that are making the most queries.
+________________
+
+
+3. Top Domains Queried
+
+
+index=_* OR index=* sourcetype=dnslogs
+| stats count by domain_name
+| sort -count
+
+
+This query returns the most queried domains from the DNS logs.
+________________
+
+
+4. DNS Queries Over Time
+
+
+index=_* OR index=* sourcetype=dnslogs
+| timechart span=1h count
+
+
+This query visualizes the frequency of DNS queries over time (grouped by 1 hour).
+________________
+
+
+5. Suspicious Domains (e.g., .xyz TLD)
+
+
+index=_* OR index=* sourcetype=dnslogs
+| search domain_name="*.xyz"
+| stats count by domain_name
+
+
+This query finds domains with potentially malicious TLDs, like .xyz, that could be associated with phishing or malware.
+________________
+
+
+6. Unusual Query Duration (Long DNS Queries)
+
+
+index=_* OR index=* sourcetype=dnslogs
+| where query_duration > 5
+| stats count by domain_name, query_duration
+| sort -query_duration
+
+
+This query highlights DNS queries that have unusually long response times, which might indicate a problem or attack.
+________________
+
+
+7. DNS Queries from a Specific Source IP
+
+
+index=_* OR index=* sourcetype=dnslogs
+| search src_ip="192.168.1.100"
+| stats count by domain_name
+| sort -count
+
+
+This query filters out DNS queries from a specific source IP (192.168.1.100) and shows the most queried domains from that IP.
+________________
+
+
+8. DNS Queries by Port
+
+
+index=_* OR index=* sourcetype=dnslogs
+| stats count by dst_port
+| sort -count
+
+
+This query identifies the most commonly used destination ports for DNS queries.
+________________
+
+
+9. Response Code Analysis
+
+
+index=_* OR index=* sourcetype=dnslogs
+| stats count by response_code
+| sort -count
+
+
+This query helps to identify DNS queries that resulted in non-standard response codes, which might indicate suspicious activity.
+________________
+
+
+10. DNS Queries by Day of the Week
+
+
+index=_* OR index=* sourcetype=dnslogs
+| eval day_of_week=strftime(_time, "%A")
+| stats count by day_of_week
+| sort day_of_week
+
+
+This query aggregates DNS queries by the day of the week to identify any trends or patterns, such as increased activity on weekends.
+________________
+
+
+11. Detect DNS Tunneling (Unusual Query Patterns)
+
+
+index=_* OR index=* sourcetype=dnslogs
+| stats count by domain_name
+| where count > 100
+| sort -count
+
+
+This query identifies domains that have been queried more than 100 times, which could be an indication of DNS tunneling or other malicious activities.
+________________
+
+
+12. Query Volume from a Specific IP over Time
+
+
+index=_* OR index=* sourcetype=dnslogs
+| search src_ip="192.168.1.100"
+| timechart span=1h count
+
+
+This query provides a timechart of DNS queries from a specific source IP (192.168.1.100) to analyze patterns over time.
+________________
+
+
+13. Domains with High Query Count in a Specific Time Window
+
+
+index=_* OR index=* sourcetype=dnslogs
+| search _time>=relative_time(now(), "-1d@d") AND _time<=now()
+| stats count by domain_name
+| sort -count
+
+
+This query identifies the most queried domains over the past 24 hours, helping detect any recent spikes in DNS activity.
+________________
+
+
+14. Detection of New Domains (First Time Query)
+
+
+index=_* OR index=* sourcetype=dnslogs
+| stats first(_time) as first_query_time by domain_name
+| where first_query_time > relative_time(now(), "-1d@d")
+| sort -first_query_time
+
+
+This query finds newly queried domains (queried for the first time in the last 24 hours), which could be suspicious.
+________________
+
+
+15. Query Frequency Per Hour
+
+
+index=_* OR index=* sourcetype=dnslogs
+| eval hour_of_day=strftime(_time, "%H")
+| stats count by hour_of_day
+| sort hour_of_day
+
+
+This query identifies DNS query frequencies per hour, helping to detect unusual spikes during off-peak hours.
+________________
+
+
+16. Detecting Malicious IPs with High Query Frequency
+
+
+index=_* OR index=* sourcetype=dnslogs
+| stats count by src_ip
+| where count > 500
+| sort -count
+
+
+This query identifies source IPs with unusually high query counts, which could be indicative of a DoS attack or automated bot activity.
+________________
+
+
+17. Filtering Specific DNS Response Codes (e.g., NXDOMAIN)
+
+
+index=_* OR index=* sourcetype=dnslogs
+| search response_code="NXDOMAIN"
+| stats count by domain_name
+| sort -count
+
+
+This query filters DNS queries that resulted in NXDOMAIN (non-existent domain) response codes, which could indicate malicious probing or attempts to access unregistered domains.
+________________
+
+
+18. Search for Specific Domain Names
+
+
+index=_* OR index=* sourcetype=dnslogs
+| search domain_name="example.com"
+| stats count by src_ip
+
+
+This query searches for a specific domain name (example.com) and shows the source IPs that queried it.
+________________
+
+
+19. List All Query Details by Source IP
+
+
+index=_* OR index=* sourcetype=dnslogs
+| stats values(domain_name) as queried_domains by src_ip
+
+
+This query shows all the domains queried by each source IP, helping track and analyze the full query history.
+________________
+
+
+20. Query Count by Response Time
+
+
+index=_* OR index=* sourcetype=dnslogs
+| stats avg(query_duration) as avg_duration by domain_name
+| sort -avg_duration
+
+
+This query identifies domains with the longest average query durations, which could indicate issues like DNS amplification or a DDoS attack.
